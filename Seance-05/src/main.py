@@ -21,11 +21,86 @@ print("Résultat sur le calcul d'un intervalle de fluctuation")
 
 donnees = pd.DataFrame(ouvrirUnFichier("./data/Echantillonnage-100-Echantillons.csv"))
 
+#Moyennes arrondies
+moyennes = donnees.mean()
+moyennes_arrondies = pd.Series({
+    col: round(moyennes[col])
+    for col in moyennes.index
+})
+print("Moyennes arrondies :")
+print(moyennes_arrondies)
+
+#Somme moyennes
+somme_moyennes = moyennes_arrondies.sum()
+freq_echantillon = moyennes_arrondies.apply(lambda x: round(x / somme_moyennes, 2))
+print("Fréquences de l'échantillon moyen :")
+print(freq_echantillon)
+
+#Population mère
+population_mere = pd.Series({
+    "Pour": 852,
+    "Contre": 911,
+    "Sans opinion": 422
+})
+somme_pop = population_mere.sum()
+freq_population = population_mere.apply(lambda x: round(x / somme_pop, 2))
+print("Fréquences de la population mère :")
+print(freq_population)
+
+#Intervalle de fluctuation à 95%
+z = 1.96
+n = somme_moyennes
+print("Intervalle de fluctuation à 95 % :")
+for opinion, f in freq_echantillon.items():
+    marge = z * math.sqrt(f * (1 - f) / n)
+    borne_inf = round(f - marge, 3)
+    borne_sup = round(f + marge, 3)
+    print(f"{opinion} : [{borne_inf} ; {borne_sup}]")
+
 #Théorie de l'estimation (intervalles de confiance)
 #L'estimation se base sur l'effectif.
 print("Résultat sur le calcul d'un intervalle de confiance")
+
+ech1 = donnees.iloc[0]
+ech1_list = list(ech1)
+total1 = sum(ech1_list)
+freq1 = [round(x / total1, 3) for x in ech1_list]
+
+print("Premier échantillon (liste) :", ech1_list)
+print("Effectif total :", total1)
+print("Fréquences du premier échantillon :", freq1)
+
+#Intervalle de fluctuation à 95%
+z = 1.96
+print("\nIntervalle de confiance à 95 % pour chaque opinion :")
+for f in freq1:
+    marge = z * math.sqrt(f * (1 - f) / total1)
+    borne_inf = round(f - marge, 3)
+    borne_sup = round(f + marge, 3)
+    print(f"{f} : [{borne_inf} ; {borne_sup}]")
 
 #Théorie de la décision (tests d'hypothèse)
 #La décision se base sur la notion de risques alpha et bêta.
 #Comme à la séance précédente, l'ensemble des tests se trouve au lien : https://docs.scipy.org/doc/scipy/reference/stats.html
 print("Théorie de la décision")
+
+test1 = ouvrirUnFichier("./data/Loi-normale-Test-1.csv")
+test2 = ouvrirUnFichier("./data/Loi-normale-Test-2.csv")
+col1 = test1.iloc[:, 0]
+col2 = test2.iloc[:, 0]
+
+stat1, p1 = scipy.stats.shapiro(col1)
+stat2, p2 = scipy.stats.shapiro(col2)
+
+print("Test 1 : p-value =", p1)
+print("Test 2 : p-value =", p2)
+
+if p1 > 0.05:
+    print("→ Le fichier 1 suit une distribution normale.")
+else:
+    print("→ Le fichier 1 ne suit pas une distribution normale.")
+
+if p2 > 0.05:
+    print("→ Le fichier 2 suit une distribution normale.")
+else:
+    print("→ Le fichier 2 ne suit pas une distribution normale.")
