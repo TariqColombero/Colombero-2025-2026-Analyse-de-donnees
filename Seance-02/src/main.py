@@ -31,17 +31,26 @@ print(contenu["Inscrits"])
 print("\nSommes colonnes numériques :\n", contenu.select_dtypes(include=["int64","float64"]).sum())
 
 # 11. Diagrammes en barres : inscrits & votants
-os.makedirs("images", exist_ok=True)
-for c in ["Inscrits", "Votants"]:
-    plt.figure(figsize=(12,6))
-    plt.bar(contenu["Libellé du département"], contenu[c], color="cornflowerblue")
-    plt.xticks(rotation=90)
-    plt.title(f"Nombre de {c} par département")
+import os
+os.makedirs("Images", exist_ok=True)
+
+departements = contenu["Libellé du département"].unique()
+
+for dept in departements:
+    data_dept = contenu[contenu["Libellé du département"] == dept]
+    
+    inscrits = data_dept["Inscrits"].values[0]
+    votants = data_dept["Votants"].values[0]
+
+    plt.figure(figsize=(5,4))
+    plt.bar(["Inscrits", "Votants"], [inscrits, votants])
+    plt.title(f"{dept} : Inscrits vs Votants")
     plt.ylabel("Nombre d’électeurs")
     plt.tight_layout()
-    plt.savefig(f"images/{c}.png", dpi=300)
+    plt.savefig(f"Images/{dept}.png", dpi=300)
     plt.close()
-print("→ Diagrammes 'Inscrits.png' et 'Votants.png' enregistrés")
+
+print("→ Diagrammes individuels par département générés dans le dossier Images/")
 
 # 12. Diagrammes circulaires : blancs, nuls, exprimés, abstentions
 os.makedirs("images_pie", exist_ok=True)
